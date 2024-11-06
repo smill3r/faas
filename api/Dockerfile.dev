@@ -1,0 +1,23 @@
+# Use an official Node.js runtime as a parent image
+FROM node:18
+
+# Set working directory inside the container
+WORKDIR /usr/src/app
+
+# Copy package.json and package-lock.json files to the container
+COPY package*.json ./
+
+# Install dependencies, including dev dependencies
+RUN npm install
+
+# Copy the rest of the application code to the container
+COPY . .
+
+# Install ts-node globally
+RUN npm install -g tsx nodemon
+
+# Expose the port your app runs on
+EXPOSE 3000
+
+# Use Nodemon with ts-node to watch for file changes and restart on updates
+CMD ["npm", "run", "dev"]
