@@ -1,2 +1,6 @@
+# Ignore libraries and build files
 **/node_modules/
 **/dist/
+
+# Ignore certificates
+**.pem
