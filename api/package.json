@@ -4,9 +4,7 @@
   "description": "FAAS implementation for Cloud Computing course evaluation",
   "main": "index.js",
   "scripts": {
-    "prestart": "./generate-cert.sh",
     "start": "tsc && node dist/app.js",
-    "predev": "./generate-cert.sh",
     "dev": "nodemon src/app.ts"
   },
   "repository": {

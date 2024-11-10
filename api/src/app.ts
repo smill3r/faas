@@ -1,19 +1,13 @@
 import express from "express";
-const fs = require("fs");
-const https = require("https");
-
 const app = express();
-const port = process.env.port || 3000;
 
-const options = {
-  key: fs.readFileSync("./certificates/key.pem"),
-  cert: fs.readFileSync("./certificates/cert.pem"),
-};
+const PORT = process.env.PORT || 3000;
 
-app.get("/", (req, res) => {
-  res.send("Hello, TypeScript Node Express!");
+app.get("/api", (req, res) => {
+  res.send(`Hello from Node.js API on port ${PORT} on container ${process.env.ID}`);
+  console.log(`Request handled by instance on port ${PORT} on container ${process.env.ID}`);
 });
 
-https.createServer(options, app).listen(port, () => {
-  console.log(`HTTPS server running on https://localhost:${port}`);
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
