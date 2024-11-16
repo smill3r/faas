@@ -1,4 +1,4 @@
 # Archivo que permite realizar pruebas desde vscode mediante el uso de la extensión REST Client
 
 // Endpoint de prueba inicial
-GET https://localhost:3000
+GET https://localhost:9443/api
