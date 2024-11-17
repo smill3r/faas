@@ -1,0 +1,6 @@
+{
+  "name": "User Service Route",
+  "methods": ["GET","POST"],
+  "uri": "/api/user/*",
+  "service_id": "2"
+}
