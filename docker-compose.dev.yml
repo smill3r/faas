@@ -32,7 +32,6 @@ services:
       - 3001:3000 
     volumes:
        - ./api:/usr/src/app         # Mount the api folder to the container’s workdir
-       - /usr/src/app/node_modules  # Prevent node_modules overwrite
     networks:
       apisix:
 
