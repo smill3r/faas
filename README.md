@@ -6,21 +6,22 @@ How to build this project?
 
 ## SSL Certificates
 
-To be able to use HTTPS to communicate trough the reverse proxy, you need to setup certificates first. There is a file called generate-cert.sh that will generate certificates and export the certificates to a .env file so that they can be loaded into the appropiate configuration file in the /apisix directory.
+To be able to use HTTPS to communicate through the reverse proxy, you need to setup certificates first. 
+There is a file called init.sh that will generate certificates and export the certificates to a .env file so that they can be loaded into the appropriate configuration file in the /apisix directory.
 
 First run:
 
 ```
-chmod +x generate-cert.sh
+chmod +x init.sh
 ```
 
 Then:
 
 ```
-./generate-cert.sh
+./init.sh
 ```
 
-If you skip this step, you won't be able to use https to make requests trough the reverse proxy, but you can just make regular http requests to the 9080 port.
+If you skip this step, you won't be able to use https to make requests through the reverse proxy, but you can just make regular http requests to the 9080 port.
 
 ### With Docker
 

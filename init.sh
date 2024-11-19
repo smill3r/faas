@@ -7,6 +7,14 @@ KEY_FILE="$CERT_DIR/key.pem"
 ENV_FILE=".env"
 DOMAIN_NAME="localhost"
 
+MONGO_PATH="faas"
+MONGO_USER="faas"
+MONGO_PASSWORD="password"
+
+APISIX_ADMIN_API_HOST="http://apisix:9180"
+APISIX_ADMIN_API_PASSWORD="password"
+JWT_SECRET="secret"
+
 # Create the cert directory if it doesn't exist
 mkdir -p "$CERT_DIR"
 
@@ -32,6 +40,14 @@ echo "Dumping certificates into .env file..."
   echo "SERVER_CERT=\"$(cat $CERT_FILE)\""
   echo "SERVER_KEY=\"$(cat $KEY_FILE)\""
   echo "DOMAIN_NAME=\"$DOMAIN_NAME\""
+
+  echo "MONGO_PATH=\"$MONGO_PATH\""
+  echo "MONGO_USER=\"$MONGO_USER\""
+  echo "MONGO_PASSWORD=\"$MONGO_PASSWORD\""
+
+  echo "APISIX_ADMIN_API_HOST=\"$APISIX_ADMIN_API_HOST\""
+  echo "APISIX_ADMIN_API_PASSWORD=\"$APISIX_ADMIN_API_PASSWORD\""
+  echo "JWT_SECRET=\"$JWT_SECRET\""
 } > "$ENV_FILE"
 
 echo "Certificates and environment variables saved to .env file."

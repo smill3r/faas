@@ -1,0 +1,6 @@
+{
+  "name": "Function Service Route",
+  "methods": ["GET","POST"],
+  "uri": "/api/function/*",
+  "service_id": "2"
+}
