@@ -38,13 +38,20 @@ if [ -f "/etcd/backups/route_user.json" ]; then
     -d @/etcd/backups/route_user.json
 fi
 
-# Restore routes if the file exists
 if [ -f "/etcd/backups/route_register.json" ]; then
   echo "Restoring route auth..."
   curl -s -X PUT "$APISIX_ADMIN_API_HOST/apisix/admin/routes/4" \
     -H "X-API-KEY: $APISIX_ADMIN_API_PASSWORD" \
     -H "Content-Type: application/json" \
     -d @/etcd/backups/route_register.json
+fi
+
+if [ -f "/etcd/backups/route_function.json" ]; then
+  echo "Restoring route function..."
+  curl -s -X PUT "$APISIX_ADMIN_API_HOST/apisix/admin/routes/5" \
+    -H "X-API-KEY: $APISIX_ADMIN_API_PASSWORD" \
+    -H "Content-Type: application/json" \
+    -d @/etcd/backups/route_function.json
 fi
 
 echo "Configuration restoration completed."
