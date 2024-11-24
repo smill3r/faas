@@ -15,19 +15,34 @@ services:
       - "2379:2379/tcp"
     networks:
       apisix:
+    volumes:
+      - ./etcd-data:/bitnami/etcd/data
 
   apisix:
-    image: apache/apisix:${APISIX_IMAGE_TAG:-3.11.0-debian}
+    image: custom-apisix:latest
     restart: always
     volumes:
       - ./apisix/conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+      - ./apisix/conf/adc.yaml:/usr/local/apisix/conf/adc.yaml:ro
+      - ./apisix/conf/adc-ssl.yaml:/usr/local/apisix/conf/adc-ssl.yaml:ro
+      - ./apisix/conf/entrypoint.sh:/usr/local/apisix/conf/entrypoint.sh:ro
+    build:
+      context: ./apisix
+      dockerfile: Dockerfile
+      args:
+        APISIX_ADMIN_API_HOST: ${APISIX_ADMIN_API_HOST}
+        APISIX_ADMIN_API_PASSWORD: ${APISIX_ADMIN_API_PASSWORD}
+    user: root
     env_file:
       - .env
     environment:
       APISIX_ENABLE_ADMIN: 'true' # Enable Admin API
       APISIX_ETCD_HOST: 'http://etcd:2379'
+      APISIX_ADMIN_API_HOST: '${APISIX_ADMIN_API_HOST}'
       APISIX_ADMIN_API_PASSWORD: '${APISIX_ADMIN_API_PASSWORD}' # Secure Admin API access
-    user: root
+      DOMAIN_NAME: '${DOMAIN_NAME}'
+      SERVER_CERT: '${SERVER_CERT}'
+      SERVER_KEY: '${SERVER_KEY}'
     ports:
       - "9180:9180/tcp"
       - "9080:9080/tcp"
@@ -38,30 +53,6 @@ services:
       apisix:
     depends_on:
       - etcd
-      - api-server-1
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://etcd:2379/version" ]
-      interval: 10s
-      retries: 5
-      timeout: 5s
-
-  restore-config:
-    image: curlimages/curl:latest
-    depends_on:
-      - apisix
-      - etcd
-    env_file:
-      - .env
-    environment:
-      APISIX_ADMIN_API_HOST: '${APISIX_ADMIN_API_HOST}'
-      APISIX_ADMIN_API_PASSWORD: '${APISIX_ADMIN_API_PASSWORD}'
-    user: root
-    volumes:
-      - ./etcd/backups:/etcd/backups:ro
-      - ./etcd/restore-config.sh:/usr/local/bin/restore-config.sh:ro
-    entrypoint: ["/bin/sh", "/usr/local/bin/restore-config.sh"]
-    networks:
-      apisix:
 
   api-server-1:
     container_name: api-server-1
@@ -77,7 +68,6 @@ services:
       MONGO_PATH: '${MONGO_PATH}'
       MONGO_USER: '${MONGO_USER}'
       MONGO_PASSWORD: '${MONGO_PASSWORD}'
-      JWT_SECRET: '${JWT_SECRET}'
       APISIX_ADMIN_API_HOST: '${APISIX_ADMIN_API_HOST}'
       APISIX_ADMIN_API_PASSWORD: '${APISIX_ADMIN_API_PASSWORD}'
     ports:

@@ -1,7 +1,0 @@
-{
-  "plugins": {
-    "basic-auth": {}
-  },
-  "upstream_id": "1",
-  "name": "service-1"
-}

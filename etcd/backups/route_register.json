@@ -1,6 +1,0 @@
-{
-  "name": "Register Service Route",
-  "methods": ["GET","POST"],
-  "uri": "/api/auth/register",
-  "upstream_id": "1"
-}

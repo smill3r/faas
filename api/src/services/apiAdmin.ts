@@ -9,3 +9,7 @@ export const axiosPut = async (uri: string, data: any)=> {
     return await axiosInstance.put(uri, data);
 }
 
+export const axiosGet = async (uri: string)=> {
+    return await axiosInstance.get(uri);
+}
+

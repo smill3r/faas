@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { Controller } from '@cc/faas/interfaces/controller.interface';
 import { AuthenticationCredentialsException } from '@cc/faas/exceptions/AuthenticationException';
 import { User } from '@cc/faas/interfaces/user.interface';
-import { axiosPut } from '@cc/faas/services/apiAdmin';
+import { axiosPut, axiosGet } from '@cc/faas/services/apiAdmin';
 
 export class AuthController implements Controller {
     public path = '/auth';
@@ -22,6 +22,13 @@ export class AuthController implements Controller {
         if (!username || !password) {
             next(new AuthenticationCredentialsException());
         }
+
+        try {
+            await axiosGet(`/consumers/${username}`);
+            response.json({ 'message': 'Username not available' });
+            return;
+        } catch(e) {}
+
         const userData = {
             username,
             plugins: {

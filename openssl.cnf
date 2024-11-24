@@ -1,0 +1,6 @@
+[ v3_ca ]
+basicConstraints = critical, CA:TRUE
+keyUsage = critical, keyCertSign, cRLSign
+
+[ v3_req ]
+subjectAltName = DNS:localhost

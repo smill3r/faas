@@ -1,0 +1,48 @@
+name: "APISIX configuration"
+version: "1.0.0"
+services:
+  - name: unprotected-service
+    upstream:
+      name: apisix-upstream
+      type: roundrobin
+      nodes:
+        - host: api-server-1
+          port: 3000
+          weight: 1
+        - host: api-server-2
+          port: 3000
+          weight: 2
+  - name: protected-service
+    upstream:
+      name: apisix-upstream
+      type: roundrobin
+      nodes:
+        - host: api-server-1
+          port: 3000
+          weight: 1
+        - host: api-server-2
+          port: 3000
+          weight: 2
+    plugins:
+      basic-auth:
+        _meta:
+          disable: false
+routes:
+  - name: register-route
+    service_id: unprotected-service
+    uri: "/api/auth/register"
+    methods:
+      - GET
+      - POST
+  - name: user-route
+    service_id: protected-service
+    uri: "/api/user/*"
+    methods:
+      - GET
+      - POST
+  - name: function-route
+    service_id: protected-service
+    uri: "/api/function/*"
+    methods:
+      - GET
+      - POST

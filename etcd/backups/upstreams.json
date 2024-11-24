@@ -1,7 +1,0 @@
-{
-  "name": "upstream-1",
-  "type": "roundrobin",
-  "nodes": {
-    "api-server-1:3000": 1
-  }
-}

@@ -1,15 +1,48 @@
 version: "3.8"
 
 services:
-  apisix:
-    image: apache/apisix:${APISIX_IMAGE_TAG:-3.11.0-debian}
+  etcd:
+    image: bitnami/etcd:latest
     restart: always
-    volumes:
-      - ./apisix/conf/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
     env_file:
       - .env
     environment:
-      - APISIX_STAND_ALONE=true
+      ETCD_ENABLE_V2: 'true'
+      ALLOW_NONE_AUTHENTICATION: 'yes'
+      ETCD_ADVERTISE_CLIENT_URLS: 'http://0.0.0.0:2379'
+      ETCD_LISTEN_CLIENT_URLS: 'http://0.0.0.0:2379'
+    ports:
+      - "2379:2379/tcp"
+    networks:
+      apisix:
+    volumes:
+      - ./etcd-data:/bitnami/etcd/data
+
+  apisix:
+    image: custom-apisix:latest
+    restart: always
+    volumes:
+      - ./apisix/conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+      - ./apisix/conf/adc.yaml:/usr/local/apisix/conf/adc.yaml:ro
+      - ./apisix/conf/adc-ssl.yaml:/usr/local/apisix/conf/adc-ssl.yaml:ro
+      - ./apisix/conf/entrypoint.sh:/usr/local/apisix/conf/entrypoint.sh:ro
+    build:
+      context: ./apisix
+      dockerfile: Dockerfile
+      args:
+        APISIX_ADMIN_API_HOST: ${APISIX_ADMIN_API_HOST}
+        APISIX_ADMIN_API_PASSWORD: ${APISIX_ADMIN_API_PASSWORD}
+    user: root
+    env_file:
+      - .env
+    environment:
+      APISIX_ENABLE_ADMIN: 'true' # Enable Admin API
+      APISIX_ETCD_HOST: 'http://etcd:2379'
+      APISIX_ADMIN_API_HOST: '${APISIX_ADMIN_API_HOST}'
+      APISIX_ADMIN_API_PASSWORD: '${APISIX_ADMIN_API_PASSWORD}' # Secure Admin API access
+      DOMAIN_NAME: '${DOMAIN_NAME}'
+      SERVER_CERT: '${SERVER_CERT}'
+      SERVER_KEY: '${SERVER_KEY}'
     ports:
       - "9180:9180/tcp"
       - "9080:9080/tcp"
@@ -18,6 +51,8 @@ services:
       - "9092:9092/tcp"
     networks:
       apisix:
+    depends_on:
+      - etcd
 
   api-server-1:
     container_name: api-server-1
@@ -25,12 +60,24 @@ services:
       context: ./api
       dockerfile: Dockerfile
     environment:
-      - PORT=3000
-      - ID=1
+      PORT: '3000'
+      ID: '1'
+      NODE_ENV: 'development'
+      MONGO_HOST: 'mongodb'
+      MONGO_PORT: '27017'
+      MONGO_PATH: '${MONGO_PATH}'
+      MONGO_USER: '${MONGO_USER}'
+      MONGO_PASSWORD: '${MONGO_PASSWORD}'
+      APISIX_ADMIN_API_HOST: '${APISIX_ADMIN_API_HOST}'
+      APISIX_ADMIN_API_PASSWORD: '${APISIX_ADMIN_API_PASSWORD}'
     ports:
-      - 3001:3000 
+      - 3001:3000
+    volumes:
+      - ./api:/usr/src/app         # Mount the api folder to the container’s workdir
     networks:
       apisix:
+    depends_on:
+      - mongodb
 
   api-server-2:
     container_name: api-server-2
@@ -38,13 +85,42 @@ services:
       context: ./api
       dockerfile: Dockerfile
     environment:
-      - PORT=3000
-      - ID=2
+      PORT: '3000'
+      ID: '2'
+      NODE_ENV: 'development'
+      MONGO_HOST: 'mongodb'
+      MONGO_PORT: '27017'
+      MONGO_PATH: '${MONGO_PATH}'
+      MONGO_USER: '${MONGO_USER}'
+      MONGO_PASSWORD: '${MONGO_PASSWORD}'
+      APISIX_ADMIN_API_HOST: '${APISIX_ADMIN_API_HOST}'
+      APISIX_ADMIN_API_PASSWORD: '${APISIX_ADMIN_API_PASSWORD}'
     ports:
-      - 3002:3000 
+      - 3002:3000
+    volumes:
+      - ./api:/usr/src/app         # Mount the api folder to the container’s workdir
+    networks:
+      apisix:
+    depends_on:
+      - mongodb
+
+  mongodb:
+    container_name: mongodb
+    image: mongo:7.0.0
+    environment:
+      MONGO_INITDB_DATABASE: '${MONGO_PATH}'
+      MONGO_INITDB_ROOT_USERNAME: '${MONGO_USER}'
+      MONGO_INITDB_ROOT_PASSWORD: '${MONGO_PASSWORD}'
+    ports:
+      - '27017:27017'
+    volumes:
+      - db:/data/db
     networks:
       apisix:
 
 networks:
   apisix:
     driver: bridge
+
+volumes:
+  db:

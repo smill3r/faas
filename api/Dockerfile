@@ -9,6 +9,7 @@ WORKDIR /app
 
 # Copy package.json and package-lock.json to install dependencies
 COPY package*.json ./
+COPY tsconfig.json ./tsconfig.json
 
 # Install dependencies (including TypeScript)
 RUN npm install
@@ -28,9 +29,11 @@ WORKDIR /app
 # Copy compiled JavaScript code and node_modules from the build stage
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/tsconfig.json ./tsconfig.json
 
 # Expose the desired port
 EXPOSE 3000
 
 # Set the command to run the application
-CMD ["node", "dist/app.js"]
+CMD ["npm", "start"]
