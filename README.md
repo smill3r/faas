@@ -6,21 +6,22 @@ How to build this project?
 
 ## SSL Certificates
 
-To be able to use HTTPS to communicate trough the reverse proxy, you need to setup certificates first. There is a file called generate-cert.sh that will generate certificates and export the certificates to a .env file so that they can be loaded into the appropiate configuration file in the /apisix directory.
+To be able to use HTTPS to communicate through the reverse proxy, you need to set up certificates first. 
+There is a file called init.sh that will generate certificates and export the certificates to a .env file so that they can be loaded into the appropriate configuration file in the /apisix directory.
 
 First run:
 
 ```
-chmod +x generate-cert.sh
+chmod +x init.sh
 ```
 
 Then:
 
 ```
-./generate-cert.sh
+./init.sh
 ```
 
-If you skip this step, you won't be able to use https to make requests trough the reverse proxy, but you can just make regular http requests to the 9080 port.
+If you skip this step, you won't be able to use https to make requests through the reverse proxy, but you can just make regular http requests to the 9080 port.
 
 ### With Docker
 
@@ -66,3 +67,44 @@ To run a development build (with nodemon):
 npm run dev
 ```
 
+## About APISIX
+
+This project sets up Apache APISIX in etcd-based mode using Docker to act as an API gateway for a Node.js API server. 
+The setup is designed to handle authentication, manage API traffic, and ensure secure communication with SSL. 
+The configuration of services, upstreams, routes, and SSL certificates is defined declaratively in ADC files.
+
+### Initial Configuration
+
+APISIX and ETCD configurations are defined in the config.yaml file, which contains the core settings for APISIX and ETCD integration.
+
+Additionally, APISIX service uses two ADC configuration files:
+- adc.yaml: Defines services, upstreams, and routes for handling API requests.
+- adc-ssl.yaml: Configures SSL certificates to enable HTTPS communication.
+
+These files are processed by the ADC tool to apply configurations directly to APISIX.
+
+### Authentication Management
+
+Apache APISIX will handle authentication using the Basic Auth plugin. 
+This allows users to securely access protected resources after registering via an unprotected route.
+
+#### Unprotected Route for Registration:
+
+Users can register by sending a POST request to an unprotected route provided by the Node.js API server, which is proxied through APISIX:
+```
+POST http://localhost:9080/api/auth/register
+```
+
+The payload for registration includes a username and password:
+```
+{
+    "username": "john",
+    "password": "password"
+}
+```
+
+On successful registration, the Node.js API server creates a new APISIX consumer via the APISIX Admin API.
+Then users can access protected routes by including their Basic Auth credentials (username and password) in the request header.
+```
+GET http://localhost:9080/api/user/me
+```

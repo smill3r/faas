@@ -1,0 +1,6 @@
+ssls:
+  - snis:
+      - ${DOMAIN_NAME}
+    certificates:
+      - certificate: ${SERVER_CERT}
+        key: ${SERVER_KEY}

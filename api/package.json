@@ -1,11 +1,12 @@
 {
-  "name": "faas",
+  "name": "@cc/faas",
   "version": "1.0.0",
+  "private": true,
   "description": "FAAS implementation for Cloud Computing course evaluation",
   "main": "index.js",
   "scripts": {
-    "start": "tsc && node dist/app.js",
-    "dev": "nodemon src/app.ts"
+    "start": "node -r tsconfig-paths/register dist/app.js",
+    "dev": "nodemon -r tsconfig-paths/register src/app.ts"
   },
   "repository": {
     "type": "git",
@@ -21,9 +22,12 @@
     "@types/express": "^5.0.0",
     "nodemon": "^3.1.7",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.6.3"
   },
   "dependencies": {
-    "express": "^4.21.1"
+    "axios": "^1.7.7",
+    "express": "^4.21.1",
+    "mongoose": "^8.8.1"
   }
 }
