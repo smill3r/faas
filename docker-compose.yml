@@ -1,6 +1,19 @@
 version: "3.8"
 
 services:
+  nats:
+    image: nats:latest
+    ports:
+      - "4222:4222" # Client connections
+      - "8222:8222" # Monitoring (optional)
+    environment:
+      - NATS_MONITOR_PORT=8222
+    volumes:
+      - nats_data:/data
+    command: --js --sd /data
+    networks:
+      apisix:
+
   etcd:
     image: bitnami/etcd:latest
     restart: always
@@ -58,9 +71,12 @@ services:
     container_name: api-server-1
     build:
       context: ./api
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     environment:
       PORT: '3000'
+      NATS_URL: nats://nats:4222
+      NATS_USER: myuser
+      NATS_PASS: mypassword
       ID: '1'
       NODE_ENV: 'development'
       MONGO_HOST: 'mongodb'
@@ -74,6 +90,7 @@ services:
       - 3001:3000
     volumes:
       - ./api:/usr/src/app         # Mount the api folder to the container’s workdir
+      - /var/run/docker.sock:/var/run/docker.sock  # Mount Docker socket
     networks:
       apisix:
     depends_on:
@@ -83,9 +100,12 @@ services:
     container_name: api-server-2
     build:
       context: ./api
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     environment:
       PORT: '3000'
+      NATS_URL: nats://nats:4222
+      NATS_USER: myuser
+      NATS_PASS: mypassword
       ID: '2'
       NODE_ENV: 'development'
       MONGO_HOST: 'mongodb'
@@ -99,28 +119,15 @@ services:
       - 3002:3000
     volumes:
       - ./api:/usr/src/app         # Mount the api folder to the container’s workdir
+      - /var/run/docker.sock:/var/run/docker.sock  # Mount Docker socket
     networks:
       apisix:
     depends_on:
       - mongodb
 
-  mongodb:
-    container_name: mongodb
-    image: mongo:7.0.0
-    environment:
-      MONGO_INITDB_DATABASE: '${MONGO_PATH}'
-      MONGO_INITDB_ROOT_USERNAME: '${MONGO_USER}'
-      MONGO_INITDB_ROOT_PASSWORD: '${MONGO_PASSWORD}'
-    ports:
-      - '27017:27017'
-    volumes:
-      - db:/data/db
-    networks:
-      apisix:
-
 networks:
-  apisix:
+  faas-network:
     driver: bridge
-
 volumes:
+  nats_data:
   db:

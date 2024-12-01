@@ -5,8 +5,6 @@ import { UserController } from '@cc/faas/controllers/user.controller';
 import { AuthController } from '@cc/faas/controllers/auth.controller';
 import { FunctionController } from '@cc/faas/controllers/function.controller';
 
-const PORT = process.env.PORT || 3000;
-
 const app: Application = express();
 app.use(express.json());
 
@@ -28,6 +26,4 @@ controllers.forEach((controller) => {
   app.use('/api', controller.router);
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+export default app;

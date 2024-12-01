@@ -1,4 +1,38 @@
 # Archivo que permite realizar pruebas desde vscode mediante el uso de la extensión REST Client
 
-// Endpoint de prueba inicial
+// HTTP request to the API
+GET http://localhost:9080/api
+
+### 
+
+// HTTPS request to the API (requires cert configuration)
 GET https://localhost:9443/api
+
+###
+
+POST http://localhost:9080/api/nats/publish
+Content-Type: application/json
+
+{
+  "message": "TestDeliver"
+}
+
+###
+
+POST http://localhost:9080/api/function/run
+Content-Type: application/json
+
+{
+  "image": "o4tmeal/function-container:latest",
+  "parameters": ["4", "80"]
+}
+
+###
+
+POST http://localhost:9080/api/function/run
+Content-Type: application/json
+
+{
+  "image": "o4tmeal/json-function-container:latest",
+  "parameters": "{\"a\": 5, \"b\": 10}"
+}
