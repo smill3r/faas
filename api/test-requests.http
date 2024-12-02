@@ -1,7 +1,7 @@
 # Archivo que permite realizar pruebas desde vscode mediante el uso de la extensión REST Client
 
 // HTTP request to the API
-GET http://localhost:9080/api
+GET http://localhost:3000/api
 
 ### 
 
@@ -10,17 +10,19 @@ GET https://localhost:9443/api
 
 ###
 
-POST http://localhost:9080/api/nats/publish
+POST http://localhost:3001/api/nats/publish
 Content-Type: application/json
 
 {
-  "message": "TestDeliver"
+  "message": "TestDeliver",
+  "subject": "SubjectTest"
 }
 
 ###
 
 POST http://localhost:9080/api/function/run
 Content-Type: application/json
+Authorization: Basic jorge:password
 
 {
   "image": "o4tmeal/function-container:latest",
@@ -31,8 +33,37 @@ Content-Type: application/json
 
 POST http://localhost:9080/api/function/run
 Content-Type: application/json
+Authorization: Basic jorge:password
 
 {
   "image": "o4tmeal/json-function-container:latest",
   "parameters": "{\"a\": 5, \"b\": 10}"
 }
+
+
+###
+
+POST http://localhost:9080/api/auth/register
+Content-Type: application/json
+
+{
+    "username": "jorge",
+    "password": "password"
+}
+
+###
+
+GET http://localhost:9080/api/user/me
+Content-Type: application/json
+Authorization: Basic jorge:password
+
+###
+
+POST http://localhost:9080/api/function/queue
+Content-Type: application/json
+Authorization: Basic jorge:password
+
+{
+  "image": "o4tmeal/function-container:latest",
+  "parameters": ["4", "80"]
+}  
