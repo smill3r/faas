@@ -11,7 +11,7 @@ export class CustomJetstreamClient {
   private client: JetStreamClient | undefined;
   constructor() {}
 
-  /**
+  /**     
    * Initialize connection and create a manager object to handle CRUD of streams and consumers
    */
   async init(natsConnection: NatsConnection) {
