@@ -1,8 +1,8 @@
 import { connect, NatsConnection } from "@nats-io/transport-node";
 import { BehaviorSubject } from "rxjs";
 import { NATS_CONFIG, NATS_SETUP } from "../config/nats-config";
-import { CustomJetstreamClient } from "../models/classes/nats-client";
-import { CustomJetstreamManager } from "../models/classes/nats-manager";
+import { CustomJetstreamClient } from "../business/nats-client";
+import { CustomJetstreamManager } from "../business/nats-manager";
 import { Consumers, Subjects } from "../types/enums";
 
 class NatsService {

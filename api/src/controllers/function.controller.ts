@@ -19,9 +19,7 @@ export class FunctionController implements Controller {
 
   private initializeRoutes() {
     this.router.get(`${this.path}/:id`, authMiddleware, this.getFunction);
-    this.router.post(`${this.path}/run`, authMiddleware, (req, res) =>
-      this.runFunction(req, res)
-    );
+
     this.router.post(`${this.path}/queue`, authMiddleware, (req, res) =>
       this.queueExecution(req, res)
     );
@@ -42,16 +40,6 @@ export class FunctionController implements Controller {
     }
   };
 
-  private async runFunction(req: Request, res: Response) {
-    const { image, parameters } = req.body;
-
-    try {
-      const output = await this.functionService.run(image, parameters);
-      res.status(200).json({ output });
-    } catch (err) {
-      res.status(500).json({ err });
-    }
-  }
 
   private async queueExecution(req: Request, res: Response) {
     const { image, parameters } = req.body;
