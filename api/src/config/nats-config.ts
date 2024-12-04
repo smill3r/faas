@@ -5,7 +5,9 @@ export const NATS_CONFIG = {
 };
 
 export const NATS_SETUP = {
-  stream: 'FUNCTIONS',
-  consumer: 'CONSUMER',
-  maxDeliver: 5
-}
+  stream: "FUNCTIONS",
+  consumer: "CONSUMER",
+  // Number of times a message will be delivered in case it's not acknowledged if it's processing fails
+  maxDeliver: 5,
+  timeout: 60 * 4 * 1000 // 4 minutos
+};

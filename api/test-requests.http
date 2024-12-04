@@ -31,18 +31,6 @@ Authorization: Basic jorge:password
 
 ###
 
-POST http://localhost:9080/api/function/run
-Content-Type: application/json
-Authorization: Basic jorge:password
-
-{
-  "image": "o4tmeal/json-function-container:latest",
-  "parameters": "{\"a\": 5, \"b\": 10}"
-}
-
-
-###
-
 POST http://localhost:9080/api/auth/register
 Content-Type: application/json
 
@@ -67,3 +55,15 @@ Authorization: Basic jorge:password
   "image": "o4tmeal/function-container:latest",
   "parameters": ["4", "80"]
 }  
+
+###
+
+
+POST http://localhost:9080/api/function/queue
+Content-Type: application/json
+Authorization: Basic jorge:password
+
+{
+  "image": "o4tmeal/json-function-container:latest",
+  "parameters": "{\"a\": 5, \"b\": 10}"
+}

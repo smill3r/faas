@@ -1,6 +1,6 @@
 export interface FunctionOutput {
     result: string;
-    statusCode: number;
+    status: number;
 }
 
 export interface FunctionWorkerMessage {

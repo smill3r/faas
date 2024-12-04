@@ -40,7 +40,6 @@ export class FunctionController implements Controller {
     }
   };
 
-
   private async queueExecution(req: Request, res: Response) {
     const { image, parameters } = req.body;
     try {

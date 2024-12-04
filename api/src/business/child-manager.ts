@@ -9,7 +9,7 @@ export function runInChildProcess(
   parameters: string | string[]
 ): Promise<FunctionOutput> {
   return new Promise((resolve, reject) => {
-    const childProcessPath = path.join(__dirname, "child-process.js");
+    const childProcessPath = path.join(__dirname, "execute-function.js");
     const worker = fork(childProcessPath);
 
     // Send data to the child process
