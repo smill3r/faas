@@ -46,3 +46,14 @@ routes:
     methods:
       - GET
       - POST
+
+ssls:
+  - id: 1
+    type: server
+    ssl_protocols:
+      - TLSv1.2
+      - TLSv1.3
+    snis:
+      - ${DOMAIN_NAME}
+    cert: |${SERVER_CERT}
+    key: |${SERVER_KEY}

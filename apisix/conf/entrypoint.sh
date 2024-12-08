@@ -11,9 +11,7 @@ until curl -s -o /dev/null -w "%{http_code}" $APISIX_ADMIN_API_HOST/apisix/admin
   sleep 5
 done
 
-adc sync -f adc.yaml
-
-#envsubst < adc-ssl.yaml > adc-ssl-processed.yaml
-#adc sync -f adc-ssl-processed.yaml -f adc.yaml
+envsubst < adc.yaml > adc-processed.yaml
+adc sync -f adc-processed.yaml
 
 tail -f /dev/null

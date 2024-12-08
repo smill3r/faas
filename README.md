@@ -92,7 +92,7 @@ This allows users to securely access protected resources after registering via a
 
 Users can register by sending a POST request to an unprotected route provided by the Node.js API server, which is proxied through APISIX:
 ```
-POST http://localhost:9080/api/auth/register
+POST https://localhost:9443/api/auth/register
 ```
 
 The payload for registration includes a username and password:
@@ -106,5 +106,5 @@ The payload for registration includes a username and password:
 On successful registration, the Node.js API server creates a new APISIX consumer via the APISIX Admin API.
 Then users can access protected routes by including their Basic Auth credentials (username and password) in the request header.
 ```
-GET http://localhost:9080/api/user/me
+GET https://localhost:9443/api/user/me
 ```
