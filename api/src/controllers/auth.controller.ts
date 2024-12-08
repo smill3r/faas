@@ -1,8 +1,8 @@
-import { Router, Request, Response, NextFunction } from 'express';
-import { Controller } from '@cc/faas/interfaces/controller.interface';
 import { AuthenticationCredentialsException } from '@cc/faas/exceptions/AuthenticationException';
+import { Controller } from '@cc/faas/interfaces/controller.interface';
 import { User } from '@cc/faas/interfaces/user.interface';
-import { axiosPut, axiosGet } from '@cc/faas/services/apiAdmin';
+import { axiosGet, axiosPut } from '@cc/faas/services/apiAdmin';
+import { NextFunction, Request, Response, Router } from 'express';
 
 export class AuthController implements Controller {
     public path = '/auth';
