@@ -4,6 +4,9 @@ USER root
 
 ARG APISIX_ADMIN_API_HOST
 ARG APISIX_ADMIN_API_PASSWORD
+ARG SERVER_CERT
+ARG SERVER_KEY
+ARG DOMAIN_NAME
 
 # Install wget and clean up to reduce image size
 RUN apt-get update && \
