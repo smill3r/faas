@@ -7,3 +7,8 @@ export enum Consumers {
     Activate = "ACTIVATE",
     Complete = "COMPLETE"
 }
+
+export enum Operation {
+    Add = "add",
+    Substract = "substract"
+}

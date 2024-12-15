@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { combineLatest, filter, first } from "rxjs";
 import { runInChildProcess } from "../business/child-manager";
 import { NATS_SETUP } from "../config/nats-config";
-import { Consumers, Subjects } from "../types/enums";
+import { Consumers, Operation, Subjects } from "../types/enums";
 import { FunctionOutput } from "../types/function";
 import { NatsServiceType } from "./nats.service";
 
@@ -32,8 +32,17 @@ export class FunctionService {
    */
   public async queue(
     image: string,
-    parameters: string | string[]
+    parameters: string | string[],
+    username: string
   ): Promise<FunctionOutput | unknown> {
+    const active = await this.getActiveFunctions(username);
+
+    if (active >= NATS_SETUP.maxConcurrent) {
+      throw new Error(
+        "Maximum number of concurrent activations reached, please try again later"
+      );
+    }
+
     const taskId = randomUUID();
 
     // Hold a promise to wait for the task to be fulfilled (the function to be run)
@@ -47,6 +56,7 @@ export class FunctionService {
         JSON.stringify({ taskId, image, parameters, host: process.env.ID }),
         Subjects.Activations
       );
+      this.modifyActivationRecord(username, Operation.Add);
       // Wait until the promise has ben fulfilled or until the timeout expires
       const result = await taskPromise;
 
@@ -54,8 +64,39 @@ export class FunctionService {
     } catch (err) {
       throw err;
     } finally {
+      this.modifyActivationRecord(username, Operation.Substract);
       this.activeTasks.delete(taskId);
     }
+  }
+
+  private async getActiveFunctions(username: string) {
+    const activeFunctions = `${username}.activations.active`;
+    const activations = await this.natsService.kvGet(activeFunctions);
+
+    if (activations) {
+      return parseInt(activations.string());
+    }
+
+    return 0;
+  }
+
+  private async modifyActivationRecord(username: string, operation: Operation) {
+    const activeFunctions = `${username}.activations.active`;
+    const active = await this.getActiveFunctions(username);
+    let newValue;
+    switch (operation) {
+      case Operation.Add:
+        newValue = active + 1;
+        break;
+      case Operation.Substract:
+        newValue = active - 1;
+        break;
+      default:
+        newValue = active;
+        break;
+    }
+
+    this.natsService.kvPut(activeFunctions, newValue);
   }
 
   /**
