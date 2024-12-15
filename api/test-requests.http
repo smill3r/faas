@@ -3,11 +3,6 @@
 // HTTP request to the API
 GET http://localhost:3000/api
 
-### 
-
-// HTTPS request to the API (requires cert configuration)
-GET https://localhost:9443/api
-
 ###
 
 POST http://localhost:3001/api/nats/publish
@@ -20,7 +15,7 @@ Content-Type: application/json
 
 ###
 
-POST http://localhost:9080/api/function/run
+POST https://localhost:9443/api/function/run
 Content-Type: application/json
 Authorization: Basic jorge:password
 
@@ -31,7 +26,7 @@ Authorization: Basic jorge:password
 
 ###
 
-POST http://localhost:9080/api/auth/register
+POST https://localhost:9443/api/auth/register
 Content-Type: application/json
 
 {
@@ -41,13 +36,13 @@ Content-Type: application/json
 
 ###
 
-GET http://localhost:9080/api/user/me
+GET https://localhost:9443/api/user/me
 Content-Type: application/json
 Authorization: Basic jorge:password
 
 ###
 
-POST http://localhost:9080/api/function/queue
+POST https://localhost:9443/api/function/queue
 Content-Type: application/json
 Authorization: Basic jorge:password
 
@@ -59,7 +54,7 @@ Authorization: Basic jorge:password
 ###
 
 
-POST http://localhost:9080/api/function/queue
+POST https://localhost:9443/api/function/queue
 Content-Type: application/json
 Authorization: Basic jorge:password
 

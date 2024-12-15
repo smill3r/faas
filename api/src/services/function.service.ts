@@ -81,8 +81,6 @@ export class FunctionService {
         timeoutPromise,
       ]);
 
-      console.log("OUTPUT IS", output);
-
       return output as FunctionOutput;
     } catch (error) {
       throw error;
@@ -100,7 +98,6 @@ export class FunctionService {
       .consumeMessages(Consumers.Activate)
       .subscribe(async (message) => {
         try {
-          message.ack();
           const { taskId, image, parameters, host } = JSON.parse(
             message.data.toString()
           );
@@ -114,8 +111,25 @@ export class FunctionService {
             }),
             originHostSubject
           );
+          message.ack();
         } catch {
-          message.nak();
+          const { taskId, host } = JSON.parse(message.data.toString());
+
+          const originHostSubject = `${Subjects.Completed}.${host}`;
+          if (
+            message.redelivered &&
+            message.info.redeliveryCount == NATS_SETUP.maxDeliver
+          ) {
+            this.natsService.publishMessage(
+              JSON.stringify({
+                taskId: taskId,
+                result: "Function exceeded number of execution attempts",
+              }),
+              originHostSubject
+            );
+          } else {
+            message.nak();
+          }
         }
       });
   }
