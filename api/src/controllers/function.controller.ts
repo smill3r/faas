@@ -42,11 +42,22 @@ export class FunctionController implements Controller {
 
   private async queueExecution(req: Request, res: Response) {
     const { image, parameters } = req.body;
+    const username = req.headers["x-consumer-username"];
     try {
-      const result = await this.functionService.queue(image, parameters);
-      res.status(200).json(result);
-    } catch (err) {
-      res.status(500).json(err);
+      if (image && parameters && username && typeof username == "string") {
+        const result = await this.functionService.queue(
+          image,
+          parameters,
+          username
+        );
+        res.status(200).json(result);
+      } else {
+        throw new Error(
+          "Missing data in your request, make sure to include the function name and parameters"
+        );
+      }
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
     }
   }
 }

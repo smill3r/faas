@@ -1,6 +1,7 @@
 import { connect, NatsConnection } from "@nats-io/transport-node";
 import { BehaviorSubject } from "rxjs";
 import { CustomJetstreamClient } from "../business/nats-client";
+import { CustomKVM } from "../business/nats-kv";
 import { CustomJetstreamManager } from "../business/nats-manager";
 import { NATS_CONFIG, NATS_SETUP } from "../config/nats-config";
 import { Consumers, Subjects } from "../types/enums";
@@ -14,6 +15,7 @@ import { Consumers, Subjects } from "../types/enums";
 class NatsService {
   private jetstreamManager: CustomJetstreamManager | undefined;
   private jetstreamClient: CustomJetstreamClient | undefined;
+  public jetstreamKV: CustomKVM | undefined;
 
   public jetstreamClientReady: BehaviorSubject<boolean> = new BehaviorSubject(
     false
@@ -27,6 +29,22 @@ class NatsService {
   constructor() {
     this.connect();
     this.onExit();
+  }
+
+  public kvGet(key: string) {
+    return this.jetstreamKV?.getEntry(NATS_SETUP.kvStore, key);
+  }
+
+  public kvPut(key: string, value: any) {
+    return this.jetstreamKV?.putEntry(NATS_SETUP.kvStore, key, value);
+  }
+
+  public kvDelete(key: string) {
+    return this.jetstreamKV?.deleteEntry(NATS_SETUP.kvStore, key);
+  }
+
+  public kvPurge(key: string) {
+    return this.jetstreamKV?.purgeEntry(NATS_SETUP.kvStore, key);
   }
 
   /**
@@ -45,10 +63,7 @@ class NatsService {
   /**
    * Requests an observable that will emit stream messages
    */
-  public consumeMessages(
-    consumer: string,
-    stream = NATS_SETUP.stream
-  ) {
+  public consumeMessages(consumer: string, stream = NATS_SETUP.stream) {
     if (this.jetstreamClient) {
       return this.jetstreamClient.observeMessages(stream, consumer);
     } else {
@@ -77,7 +92,7 @@ class NatsService {
    * Configures the Stream and the Consumers needed to send and receive messages
    */
   private async configureStream(): Promise<void> {
-    if (this.jetstreamManager) {
+    if (this.jetstreamManager && this.jetstreamClient) {
       const allCompleted = `${Subjects.Completed}.*`;
       await this.jetstreamManager.addStream(NATS_SETUP.stream, [
         Subjects.Activations,
@@ -101,6 +116,13 @@ class NatsService {
         NATS_SETUP.maxDeliver,
         instanceSpecificSubject
       );
+
+      const jc = this.jetstreamClient.getClient();
+      if (jc) {
+        this.jetstreamKV = new CustomKVM();
+        this.jetstreamKV.init(jc);
+        this.jetstreamKV.createStore(NATS_SETUP.kvStore);
+      }
 
       this.jetstreamClientReady.next(true);
       this.jetstreamManagerReady.next(true);

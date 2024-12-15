@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@nats-io/jetstream": "^3.0.0-26",
+    "@nats-io/kv": "^3.0.0-29",
     "@nats-io/transport-node": "^3.0.0-24",
     "axios": "^1.7.7",
     "dockerode": "^4.0.2",

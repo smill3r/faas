@@ -18,6 +18,13 @@ export class CustomJetstreamClient {
   constructor() {}
 
   /**
+   * Method that exposes the client object, needed to provide this client to the kv manager
+   */
+  public getClient(): JetStreamClient | undefined {
+    return this.client;
+  }
+
+  /**
    * Initialize connection and create a manager object to handle CRUD of streams and consumers
    */
   public async init(natsConnection: NatsConnection): Promise<void> {
