@@ -6,7 +6,7 @@ import {
   PurgeResponse,
   StreamInfo,
 } from "@nats-io/jetstream";
-import { NatsConnection } from "@nats-io/transport-node";
+import { Nanos, NatsConnection } from "@nats-io/transport-node";
 
 /**
  * Class that handles CRUD of streams and consumer resources.
@@ -66,7 +66,7 @@ export class CustomJetstreamManager {
       return this.manager.consumers.add(stream, {
         durable_name: durable_name,
         ack_policy: AckPolicy.Explicit,
-        max_deliver: max_deliver,
+        max_deliver: max_deliver
       });
     }
   }
@@ -79,7 +79,8 @@ export class CustomJetstreamManager {
     stream: string,
     durable_name: string,
     max_deliver: number,
-    filter_subject: string
+    filter_subject: string,
+    max_ack_wait?: Nanos
   ): Promise<ConsumerInfo | undefined> {
     if (this.manager) {
       return this.manager.consumers.add(stream, {
@@ -87,6 +88,7 @@ export class CustomJetstreamManager {
         ack_policy: AckPolicy.Explicit,
         max_deliver: max_deliver,
         filter_subject: filter_subject,
+        ...(max_ack_wait && { ack_wait: max_ack_wait }),
       });
     }
   }

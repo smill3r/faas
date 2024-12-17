@@ -44,7 +44,7 @@ export class FunctionController implements Controller {
     const { image, parameters } = req.body;
     const username = req.headers["x-consumer-username"];
     try {
-      if (image && parameters && username && typeof username == "string") {
+      if (image && username && typeof username == "string") {
         const result = await this.functionService.queue(
           image,
           parameters,

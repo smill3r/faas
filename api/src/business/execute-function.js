@@ -28,17 +28,10 @@ async function createContainer(image, parameters) {
     Cmd: typeof parameters === "string" ? [parameters] : parameters,
     HostConfig: {
       PortBindings: {
-        "8080/tcp": [{ HostPort: "8080" }],
+        "8080/tcp": [{ HostPort: "0" }], // Passing 0 indicates that docker will assign a random available port
       },
     },
   });
-}
-
-// Timeout handling
-async function timeout(container) {
-  await container.stop();
-  await container.remove({ force: true, v: true });
-  throw new Error("Function execution timed out");
 }
 
 // Clean result logs
@@ -49,13 +42,11 @@ function cleanResult(log) {
 
 // Listen for messages from the parent process
 process.on("message", async ({ image, parameters }) => {
+  let container;
   try {
     await pullImage(image);
-
-    const container = await createContainer(image, parameters);
+    container = await createContainer(image, parameters);
     await container.start();
-
-    const timeoutId = setTimeout(() => timeout(container), 60000);
 
     const status = await container.wait();
 
@@ -70,8 +61,6 @@ process.on("message", async ({ image, parameters }) => {
       follow: false,
     });
 
-    clearTimeout(timeoutId);
-
     const statusCode = status?.StatusCode;
     const result = {
       result:
@@ -84,5 +73,7 @@ process.on("message", async ({ image, parameters }) => {
     process.send({ success: true, result });
   } catch (err) {
     process.send({ success: false, error: err.message });
+  } finally {
+    await container.remove({ force: true, v: true });
   }
 });

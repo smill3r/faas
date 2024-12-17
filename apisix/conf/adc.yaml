@@ -16,6 +16,10 @@ services:
     upstream:
       name: apisix-upstream
       type: roundrobin
+      timeout:
+        connect: 660 # 11 minutes in seconds
+        send: 660
+        read: 660
       nodes:
         - host: api-server-1
           port: 3000
