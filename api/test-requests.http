@@ -5,27 +5,7 @@ GET http://localhost:3000/api
 
 ###
 
-POST http://localhost:3001/api/nats/publish
-Content-Type: application/json
-
-{
-  "message": "TestDeliver",
-  "subject": "SubjectTest"
-}
-
-###
-
-POST https://localhost:9443/api/function/run
-Content-Type: application/json
-Authorization: Basic jorge:password
-
-{
-  "image": "o4tmeal/function-container:latest",
-  "parameters": ["4", "80"]
-}
-
-###
-
+// Register an user with username and password
 POST https://localhost:9443/api/auth/register
 Content-Type: application/json
 
@@ -36,12 +16,14 @@ Content-Type: application/json
 
 ###
 
+// Get user info
 GET https://localhost:9443/api/user/me
 Content-Type: application/json
 Authorization: Basic jorge:password
 
 ###
 
+// Activate simple function with array of parameters
 POST https://localhost:9443/api/function/queue
 Content-Type: application/json
 Authorization: Basic jorge:password
@@ -53,7 +35,7 @@ Authorization: Basic jorge:password
 
 ###
 
-
+// Activate function with JSON parameters
 POST https://localhost:9443/api/function/queue
 Content-Type: application/json
 Authorization: Basic jorge:password
@@ -61,4 +43,16 @@ Authorization: Basic jorge:password
 {
   "image": "o4tmeal/json-function-container:latest",
   "parameters": "{\"a\": 5, \"b\": 10}"
+}
+
+###
+
+// Activate long running function (5 minutes)
+POST https://localhost:9443/api/function/queue
+Content-Type: application/json
+Authorization: Basic jorge:password
+
+{
+  "image": "o4tmeal/long-task-container",
+  "parameters": ""
 }
