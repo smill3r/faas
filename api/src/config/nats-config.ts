@@ -11,5 +11,5 @@ export const NATS_SETUP = {
   // Number of times a message will be delivered in case it's not acknowledged if it's processing fails
   maxDeliver: 5,
   maxConcurrent: 10,
-  timeout: 60 * 4 * 1000 // 4 minutos
+  ack_wait: 60 * 1000000000 * 2, // 2 minutos en nanosegundos
 };

@@ -96,7 +96,7 @@ class NatsService {
       const allCompleted = `${Subjects.Completed}.*`;
       await this.jetstreamManager.addStream(NATS_SETUP.stream, [
         Subjects.Activations,
-        allCompleted,
+        allCompleted,   
       ]);
 
       // Add consumer for function activations
@@ -104,7 +104,8 @@ class NatsService {
         NATS_SETUP.stream,
         Consumers.Activate,
         NATS_SETUP.maxDeliver,
-        Subjects.Activations
+        Subjects.Activations,
+        NATS_SETUP.ack_wait
       );
 
       // Add consumer for function completions
