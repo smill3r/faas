@@ -11,8 +11,10 @@
     "esModuleInterop": true,
     "strict": true,
     "moduleResolution": "nodenext",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowJs": true,          // Allow JavaScript files in the project
+    "checkJs": false,         // Set to true if you want TypeScript to check `.js` files for errors
   },
-  "include": ["src", "dist"],
+  "include": ["src"],
   "exclude": ["node_modules"]
 }
