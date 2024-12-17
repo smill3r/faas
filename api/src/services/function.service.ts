@@ -5,6 +5,7 @@ import { NATS_SETUP } from "../config/nats-config";
 import { Consumers, Operation, Subjects } from "../types/enums";
 import { FunctionOutput } from "../types/function";
 import { NatsServiceType } from "./nats.service";
+import { ACTIVATIONS_SETTINGS } from "../config/activations-config";
 
 /**
  * Service that handles the function related tasks, it uses the NATS service
@@ -113,7 +114,7 @@ export class FunctionService {
         (_, reject) =>
           (timeoutId = setTimeout(
             () => reject(new Error("Timeout for function execution")),
-            NATS_SETUP.timeout
+            ACTIVATIONS_SETTINGS.functionTimeout
           ))
       );
 
@@ -138,11 +139,16 @@ export class FunctionService {
     this.natsService
       .consumeMessages(Consumers.Activate)
       .subscribe(async (message) => {
+        let intervalId;
         try {
           const { taskId, image, parameters, host } = JSON.parse(
             message.data.toString()
           );
+          intervalId = setInterval(() => {
+            message.working();
+          }, ACTIVATIONS_SETTINGS.noticeInterval);
           const output = await this.executeFunction(image, parameters);
+          clearInterval(intervalId);
           const originHostSubject = `${Subjects.Completed}.${host}`;
           // Publish message stating that the function was executed and sharing the result
           this.natsService.publishMessage(
@@ -153,7 +159,8 @@ export class FunctionService {
             originHostSubject
           );
           message.ack();
-        } catch {
+        } catch (err) {
+          clearInterval(intervalId);
           const { taskId, host } = JSON.parse(message.data.toString());
 
           const originHostSubject = `${Subjects.Completed}.${host}`;
