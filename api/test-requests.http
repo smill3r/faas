@@ -56,3 +56,27 @@ Authorization: Basic jorge:password
   "image": "o4tmeal/long-task-container",
   "parameters": ""
 }
+
+###
+
+// Activate a function that connects to the internet 
+POST https://localhost:9443/api/function/queue
+Content-Type: application/json
+Authorization: Basic jorge:password
+
+{
+  "image": "o4tmeal/web-function:latest",
+  "parameters": ""
+}
+
+###
+
+// Activate a function that only has cmd
+POST https://localhost:9443/api/function/queue
+Content-Type: application/json
+Authorization: Basic jorge:password
+
+{
+  "image": "o4tmeal/web-function:cmd",
+  "parameters": ""
+}

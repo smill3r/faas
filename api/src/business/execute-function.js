@@ -21,11 +21,20 @@ async function pullImage(image) {
 }
 
 // Create a Docker container
-async function createContainer(image, parameters) {
+async function createContainer(imageName, parameters) {
+
+  const image = docker.getImage(imageName);
+  const imageInfo = await image.inspect();
+
+  const cmd = imageInfo.Config.Cmd;
+  const cmdParams = typeof parameters === "string" ? [parameters] : parameters;
+  
+  const completeCmd = [].concat(cmd || [], cmdParams || []);
+
   return docker.createContainer({
-    Image: image,
+    Image: imageName,
     ExposedPorts: { "8080/tcp": {} },
-    Cmd: typeof parameters === "string" ? [parameters] : parameters,
+    Cmd: completeCmd,
     HostConfig: {
       PortBindings: {
         "8080/tcp": [{ HostPort: "0" }], // Passing 0 indicates that docker will assign a random available port

@@ -159,7 +159,7 @@ export class FunctionService {
             originHostSubject
           );
           message.ack();
-        } catch (err) {
+        } catch (err: any) {
           clearInterval(intervalId);
           const { taskId, host } = JSON.parse(message.data.toString());
 
@@ -172,6 +172,7 @@ export class FunctionService {
               JSON.stringify({
                 taskId: taskId,
                 result: "Function exceeded number of execution attempts",
+                error: err.message
               }),
               originHostSubject
             );
@@ -195,7 +196,7 @@ export class FunctionService {
       .subscribe((message) => {
         message.ack();
 
-        const { taskId, result } = JSON.parse(message.data.toString());
+        const { taskId, result, error } = JSON.parse(message.data.toString());
 
         if (this.activeTasks.has(taskId)) {
           const { resolve } = this.activeTasks.get(taskId);
