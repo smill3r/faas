@@ -1,12 +1,12 @@
 import { randomUUID } from "crypto";
 import { combineLatest, filter, first } from "rxjs";
 import { runInChildProcess } from "../business/child-manager";
+import { ACTIVATIONS_SETTINGS } from "../config/activations-config";
 import { NATS_SETUP } from "../config/nats-config";
+import { FunctionModel, UserModel } from "../models";
 import { Consumers, Operation, Subjects } from "../types/enums";
 import { FunctionOutput } from "../types/function";
 import { NatsServiceType } from "./nats.service";
-import { ACTIVATIONS_SETTINGS } from "../config/activations-config";
-
 /**
  * Service that handles the function related tasks, it uses the NATS service
  * in order to queue functions execution and notify when functions have been executed.
@@ -23,9 +23,81 @@ export class FunctionService {
 
   /**
    * Registers a function for an user
-   * TODO: Implement
    */
-  public async publish() {}
+  public async register(
+    name: string,
+    image: string,
+    description: string,
+    username: string
+  ) {
+    try {
+      const user = await this.getUser(username);
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      const existingFunction = await this.getFunction(user, name);
+
+      if (existingFunction) {
+        // Update existing function
+        existingFunction.image = image;
+        existingFunction.description = description;
+        await existingFunction.save();
+      } else {
+        // Create a new function
+        const newFunction = new FunctionModel({
+          name,
+          image,
+          description,
+          user: user._id,
+        });
+        await newFunction.save();
+      }
+    } catch (e: any) {
+      console.error("Error in register method:", e.message);
+    }
+  }
+
+  private async getUser(username: string) {
+    return UserModel.findOne({ username });
+  }
+
+  private async getFunction(user: any, functionName: string) {
+    return FunctionModel.findOne({
+      name: functionName,
+      user: user._id,
+    });
+  }
+
+  public async getUserFunctions(username: string) {
+    const user = await this.getUser(username);
+
+    if (user) {
+      return FunctionModel.find({
+        user: user._id,
+      });
+    }
+  }
+
+  public async executeFunction(
+    functionName: string,
+    parameters: string | string[],
+    username: string
+  ) {
+    const user = await this.getUser(username);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const userFunction = await this.getFunction(user, functionName);
+
+    if (userFunction && userFunction.image) {
+      const result = await this.queue(userFunction.image, parameters, username);
+      return result;
+    }
+  }
 
   /**
    * Adds a function to the queue, creates a promise for that function execution
@@ -104,7 +176,7 @@ export class FunctionService {
    * Executes function using child process and promises
    * in order to parallelize execution of multiple functions
    */
-  private async executeFunction(
+  private async orchestrateFunctionExecution(
     image: string,
     parameters: string | string[]
   ): Promise<FunctionOutput> {
@@ -147,7 +219,10 @@ export class FunctionService {
           intervalId = setInterval(() => {
             message.working();
           }, ACTIVATIONS_SETTINGS.noticeInterval);
-          const output = await this.executeFunction(image, parameters);
+          const output = await this.orchestrateFunctionExecution(
+            image,
+            parameters
+          );
           clearInterval(intervalId);
           const originHostSubject = `${Subjects.Completed}.${host}`;
           // Publish message stating that the function was executed and sharing the result
@@ -172,7 +247,7 @@ export class FunctionService {
               JSON.stringify({
                 taskId: taskId,
                 result: "Function exceeded number of execution attempts",
-                error: err.message
+                error: err.message,
               }),
               originHostSubject
             );
