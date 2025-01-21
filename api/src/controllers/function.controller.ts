@@ -1,9 +1,6 @@
-import { FunctionNotFoundException } from "@cc/faas/exceptions/FunctionException";
 import { Controller } from "@cc/faas/interfaces/controller.interface";
-import { RequestWithUser } from "@cc/faas/interfaces/requestWithUser.interface";
 import { authMiddleware } from "@cc/faas/middleware/auth.middleware";
-import { functionModel } from "@cc/faas/models/function.model";
-import { NextFunction, Request, Response, Router } from "express";
+import { Request, Response, Router } from "express";
 import { FunctionService } from "../services/function.service";
 import { NatsServiceType } from "../services/nats.service";
 
@@ -18,35 +15,55 @@ export class FunctionController implements Controller {
   }
 
   private initializeRoutes() {
-    this.router.get(`${this.path}/:id`, authMiddleware, this.getFunction);
-
-    this.router.post(`${this.path}/queue`, authMiddleware, (req, res) =>
-      this.queueExecution(req, res)
+    this.router.post(`${this.path}/invokeFunction`, authMiddleware, (req, res) =>
+      this.invokeFunction(req, res)
+    );
+    this.router.post(`${this.path}/register`, authMiddleware, (req, res) =>
+      this.registerFunction(req, res)
+    );
+    this.router.get(`${this.path}/`, authMiddleware, (req, res) =>
+      this.getUserFunctions(req, res)
     );
   }
 
-  private getFunction = async (
-    request: RequestWithUser,
-    response: Response,
-    next: NextFunction
-  ) => {
-    const id = request.params.id;
-    const userFunctionQuery = functionModel.findById(id);
-    const userFunction = await userFunctionQuery;
-    if (userFunction) {
-      response.send(userFunction);
-    } else {
-      next(new FunctionNotFoundException());
-    }
-  };
 
-  private async queueExecution(req: Request, res: Response) {
-    const { image, parameters } = req.body;
+  private async getUserFunctions(req: Request, res: Response) {
+    const username = req.headers["x-consumer-username"] as string;
+    if (username) {
+      try {
+        const functions = await this.functionService.getUserFunctions(username);
+        res.status(200).json(functions);
+      } catch (err: any) {
+        res.status(500).json({ error: err.message });
+      }
+    } else {
+      res.status(400).send("Missing username in your request");
+    }
+  }
+
+
+  private registerFunction(req: Request, res: Response) {
+    const { name, image, description } = req.body;
+    const username = req.headers["x-consumer-username"] as string;
+    if (image && name && description && username) {
+      try {
+        this.functionService.register(name, image, description, username);
+        res.status(200).send("Function registered successfully");
+      } catch (err: any) {
+        res.status(500).json({ error: err.message });
+      }
+    } else {
+      res.status(400).send("Missing data in your request");
+    }
+  }
+
+  private async invokeFunction(req: Request, res: Response) {
+    const { functionName, parameters } = req.body;
     const username = req.headers["x-consumer-username"];
     try {
-      if (image && username && typeof username == "string") {
-        const result = await this.functionService.queue(
-          image,
+      if (functionName && username && typeof username == "string") {
+        const result = await this.functionService.executeFunction(
+          functionName,
           parameters,
           username
         );

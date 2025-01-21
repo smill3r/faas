@@ -1,15 +1,16 @@
 import * as mongoose from 'mongoose';
-import { Function } from '@cc/faas/interfaces/function.interface';
+import { Schema } from 'mongoose';
+import { Function as IFunction } from '@cc/faas/interfaces/function.interface';
 
-const functionSchema = new mongoose.Schema(
+const FunctionSchema = new mongoose.Schema(
     {
-        _id: String,
         name: String,
-    },
-    {
-        toJSON: {
-            getters: true,
-        },
-    },
+        image: String,
+        description: String,
+        user: {
+            type: Schema.Types.ObjectId,
+            ref: 'User'
+        }
+    }
 );
-export const functionModel = mongoose.model<Function & mongoose.Document>('Function', functionSchema);
+export const FunctionModel = mongoose.model('Function', FunctionSchema);

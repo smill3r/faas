@@ -3,6 +3,7 @@ import { Controller } from '@cc/faas/interfaces/controller.interface';
 import { User } from '@cc/faas/interfaces/user.interface';
 import { axiosGet, axiosPut } from '@cc/faas/services/apiAdmin';
 import { NextFunction, Request, Response, Router } from 'express';
+import { UserModel } from '@cc/faas/models/user.model';
 
 export class AuthController implements Controller {
     public path = '/auth';
@@ -28,7 +29,6 @@ export class AuthController implements Controller {
             response.json({ 'message': 'Username not available' });
             return;
         } catch(e) {}
-
         const userData = {
             username,
             plugins: {
@@ -42,6 +42,8 @@ export class AuthController implements Controller {
         const user = {
             username: res.data.value.username
         } as User;
+        const newUser = new UserModel(user);
+        await newUser.save();
         response.json({ user });
     }
 }
