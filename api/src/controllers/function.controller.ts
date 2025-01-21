@@ -19,45 +19,108 @@ export class FunctionController implements Controller {
 
   private initializeRoutes() {
     this.router.get(`${this.path}/:id`, authMiddleware, this.getFunction);
-
-    this.router.post(`${this.path}/queue`, authMiddleware, (req, res) =>
-      this.queueExecution(req, res)
-    );
+    this.router.post(`${this.path}/register`, authMiddleware, this.registerFunction);
+    this.router.delete(`${this.path}/:id`, authMiddleware, this.deregisterFunction);
+    this.router.post(`${this.path}/queue`, authMiddleware, this.queueExecution);
   }
 
+  // Get a function by ID
   private getFunction = async (
     request: RequestWithUser,
     response: Response,
     next: NextFunction
-  ) => {
+  ): Promise<void> => {
     const id = request.params.id;
-    const userFunctionQuery = functionModel.findById(id);
-    const userFunction = await userFunctionQuery;
-    if (userFunction) {
-      response.send(userFunction);
-    } else {
-      next(new FunctionNotFoundException());
+    const username = request.user?.username;
+
+    try {
+      const userFunction = await functionModel.findOne({ _id: id, username });
+      if (userFunction) {
+        response.send(userFunction);
+      } else {
+        next(new FunctionNotFoundException());
+      }
+    } catch (err) {
+      next(err);
     }
   };
 
-  private async queueExecution(req: Request, res: Response) {
-    const { image, parameters } = req.body;
-    const username = req.headers["x-consumer-username"];
-    try {
-      if (image && username && typeof username == "string") {
-        const result = await this.functionService.queue(
-          image,
-          parameters,
-          username
-        );
-        res.status(200).json(result);
-      } else {
-        throw new Error(
-          "Missing data in your request, make sure to include the function name and parameters"
-        );
-      }
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+  // Register a new function
+  private registerFunction = async (
+    req: RequestWithUser,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    const { name, dockerImage } = req.body;
+    const username = req.user?.username;
+
+    if (!name || !dockerImage || !username) {
+      res.status(400).json({ error: "Missing parameters: name or dockerImage." });
+      return;
     }
-  }
+
+    try {
+      const newFunction = new functionModel({
+        _id: `${username}-${name}`, 
+        name,
+        username,
+        dockerImage,
+        createdAt: new Date(),
+      });
+
+      await newFunction.save();
+
+      res.status(201).json({
+        message: "Function registered successfully.",
+        function: newFunction,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  // Deregister a function
+  private deregisterFunction = async (
+    req: RequestWithUser,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    const id = req.params.id;
+    const username = req.user?.username; // Authenticated user's username
+
+    try {
+      const userFunction = await functionModel.findOneAndDelete({ _id: id, username });
+      if (userFunction) {
+        res.status(200).json({ message: "Function deregistered successfully." });
+      } else {
+        res.status(404).json({ error: "Function not found or you don't have permissions to delete it." });
+      }
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  // Queue a function for execution
+  private queueExecution = async (
+    req: RequestWithUser,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    const { image, parameters } = req.body;
+    const username = req.user?.username;
+
+    if (!image || !username) {
+      res.status(400).json({
+        error: "Missing parameters. Make sure to include the function name and parameters.",
+      });
+      return;
+    }
+
+    try {
+      const result = await this.functionService.queue(image, parameters, username);
+      res.status(200).json(result);
+    } catch (err: any) {
+      next(err);
+    }
+  };
 }

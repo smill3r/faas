@@ -1,3 +1,8 @@
 export interface Function {
-    name: string;
-}
+    _id: string; 
+    name: string; 
+    userId: string;
+    dockerImage: string;
+    createdAt: Date; 
+  }
+  
