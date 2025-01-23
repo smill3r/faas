@@ -5,5 +5,7 @@
 # Ignore certificates
 **.pem
 
-# Ignore environment files
-.env
+.idea
+
+etcd-data
+certs

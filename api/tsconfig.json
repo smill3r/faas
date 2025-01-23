@@ -1,10 +1,20 @@
 {
-    "compilerOptions": {
-      "target": "es6",
-      "module": "commonjs",
-      "outDir": "./dist",
-      "rootDir": "./src",
-      "strict": true,
-      "esModuleInterop": true
-    }
-  }
+  "compilerOptions": {
+    "target": "es6",
+    "module": "nodenext",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": "./",
+    "paths": {
+      "@cc/faas/*": ["src/*", "dist/*"]
+    },
+    "esModuleInterop": true,
+    "strict": true,
+    "moduleResolution": "nodenext",
+    "skipLibCheck": true,
+    "allowJs": true,          // Allow JavaScript files in the project
+    "checkJs": false,         // Set to true if you want TypeScript to check `.js` files for errors
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}

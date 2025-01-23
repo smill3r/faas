@@ -1,4 +1,130 @@
 # Archivo que permite realizar pruebas desde vscode mediante el uso de la extensión REST Client
 
-// Endpoint de prueba inicial
-GET https://localhost:9443/api
+// HTTP request to the API
+GET http://localhost:3000/api
+
+###
+
+// Register an user with username and password
+POST https://localhost:9443/api/auth/register
+Content-Type: application/json
+
+{
+    "username": "jorge",
+    "password": "password"
+}
+
+###
+
+// Register a function
+POST https://localhost:9443/api/function/register
+Content-Type: application/json
+Authorization: Basic jorge:password
+
+{
+    "name": "addTwoNumbers",
+    "image": "o4tmeal/function-container:latest",
+    "description": "Simple function that adds two numbers"
+}
+
+###
+
+// Register a function
+POST https://localhost:9443/api/function/register
+Content-Type: application/json
+Authorization: Basic jorge:password
+
+{
+    "name": "addTwoNumbersJson",
+    "image": "o4tmeal/json-function-container:latest",
+    "description": "Simple function that adds two numbers from json parameter"
+}
+
+###
+
+// Register a function
+POST https://localhost:9443/api/function/register
+Content-Type: application/json
+Authorization: Basic jorge:password
+
+{
+    "name": "longFunction",
+    "image": "o4tmeal/long-task-container",
+    "description": "Function that executes for a long time (about 5 minutes)"
+}
+
+###
+
+// Register a function
+POST https://localhost:9443/api/function/register
+Content-Type: application/json
+Authorization: Basic jorge:password
+
+{
+    "name": "callAPI",
+    "image": "o4tmeal/web-function:latest",
+    "description": "Function that executes a call to a web api"
+}
+
+
+###
+
+// Get user functions
+GET https://localhost:9443/api/function/
+Content-Type: application/json
+Authorization: Basic jorge:password
+
+###
+
+// Get user info
+GET https://localhost:9443/api/user/me
+Content-Type: application/json
+Authorization: Basic jorge:password
+
+###
+
+// Activate simple function with array of parameters
+POST https://localhost:9443/api/function/invokeFunction
+Content-Type: application/json
+Authorization: Basic jorge:password
+
+{
+  "functionName": "addTwoNumbers",
+  "parameters": ["4", "80"]
+}  
+
+###
+
+// Activate function with JSON parameters
+POST https://localhost:9443/api/function/invokeFunction
+Content-Type: application/json
+Authorization: Basic jorge:password
+
+{
+  "functionName": "addTwoNumbersJson",
+  "parameters": "{\"a\": 5, \"b\": 10}"
+}
+
+###
+
+// Activate long running function (5 minutes)
+POST https://localhost:9443/api/function/invokeFunction
+Content-Type: application/json
+Authorization: Basic jorge:password
+
+{
+  "functionName": "longFunction",
+  "parameters": ""
+}
+
+###
+
+// Activate a function that connects to the internet 
+POST https://localhost:9443/api/function/invokeFunction
+Content-Type: application/json
+Authorization: Basic jorge:password
+
+{
+  "functionName": "callAPI",
+  "parameters": ""
+}
