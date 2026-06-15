@@ -1,4 +1,6 @@
-# Archivo que permite realizar pruebas desde vscode mediante el uso de la extensión REST Client
+# REST Client test file (VS Code extension: humao.rest-client)
+# Run: open this file and click "Send Request" above any block
+# Requires: docker compose up (or docker compose -f docker-compose.dev.yml up)
 
 // HTTP request to the API
 GET http://localhost:3000/api

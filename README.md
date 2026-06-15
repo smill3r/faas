@@ -1,10 +1,8 @@
-# FAAS Project Guide
-This is a little guide on the FAAS project configuration and development setup. It will act temporarily as a guide for the team to indicate any steps needed to configure the project for development and to build it, but it will be edited before delivering the final version to reflect only needed details.
+# FaaS Platform
 
-## Build
-How to build this project?
+[![CI](https://github.com/smill3r/faas/actions/workflows/ci.yml/badge.svg)](https://github.com/smill3r/faas/actions/workflows/ci.yml)
 
-## SSL Certificates
+A lightweight Function-as-a-Service platform built on [Apache APISIX](https://apisix.apache.org/) and Node.js. Submit JavaScript functions via a REST API, invoke them synchronously or asynchronously, and watch live traffic metrics in Grafana.
 
 To be able to use HTTPS to communicate through the reverse proxy, you need to set up certificates first. 
 There is a file called init.sh that will generate certificates and export the certificates to a .env file so that they can be loaded into the appropriate configuration file in the /apisix directory.
@@ -23,36 +21,119 @@ Then:
 
 If you skip this step, you won't be able to use https to make requests through the reverse proxy, but you can just make regular http requests to the 9080 port.
 
-### With Docker
+> Skip this step to use plain HTTP on port `9080` — APISIX still starts but without TLS.
 
-The project is currently using Docker to build images and deploy containers based on those images, so make sure you have installed and running the [Docker](https://docs.docker.com) daemon on your computer. 
+### 2. Run with Docker Compose
 
-To run a compiled version of the project go to the root folder of the project and use the following command:
+**Production build:**
 
-```
+```bash
 docker compose up
 ```
 
-This will compile and execute the project, but it will not reload on any changes, use it when you want to perform tests on integration or performance. 
+**Development build** (hot reload on API changes):
 
-If you want to run a development version, which will refresh after you save your changes in the code, run:
-
-```
+```bash
 docker compose -f docker-compose.dev.yml up
 ```
 
-However, take into account that if you make any significant changes (like adding new services or components to the project) you might need to edit the docker-compose.dev.yml file, and the same goes for the build mode. 
+### 3. Try the API
 
-### Build each component
-You might want to build a component by it's own in order to test or build things isolated from other services. If you want to do that, here's how for each component.
+```bash
+# Health check (no key required)
+curl http://localhost:9080/api/
 
-#### HTTP Server
-To run the Node.js Server, just make sure to have installed the [Node](https://nodejs.org/en) runtime environment on your computer. I recommend using [Node Version Manager](https://github.com/nvm-sh/nvm) for this to avoid any versioning issues, make sure you are using the correct version specified on the project files. 
+# Register a function
+curl -X POST http://localhost:9080/api/functions \
+  -H "apikey: demo-key-changeme" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "greet", "code": "return \"Hello, \" + args.name + \"!\";"}'
 
-To install dependencies:
+# Invoke it synchronously
+curl -X POST http://localhost:9080/api/functions/greet/invoke \
+  -H "apikey: demo-key-changeme" \
+  -H "Content-Type: application/json" \
+  -d '{"args": {"name": "World"}}'
+
+# Invoke asynchronously (dispatched via NATS)
+curl -X POST http://localhost:9080/api/functions/greet/invoke/async \
+  -H "apikey: demo-key-changeme" \
+  -H "Content-Type: application/json" \
+  -d '{"args": {"name": "World"}}'
+# → {"jobId": "..."}
+
+# Poll the result
+curl http://localhost:9080/api/jobs/<jobId> \
+  -H "apikey: demo-key-changeme"
+```
+
+## Monitoring
+
+After `docker compose up`, open:
+
+- **Grafana**: [http://localhost:3000](http://localhost:3000) (no login required)
+- **Prometheus**: [http://localhost:9090](http://localhost:9090)
+- **Raw metrics**: [http://localhost:9091/apisix/prometheus/metrics](http://localhost:9091/apisix/prometheus/metrics)
+- **NATS monitoring**: [http://localhost:8222](http://localhost:8222)
+
+Grafana comes pre-configured with the Prometheus datasource. To import the official APISIX dashboard, go to **Dashboards → Import** and enter ID `11719`.
+
+## Gateway plugins
+
+| Plugin | Route | Effect |
+|---|---|---|
+| `key-auth` | `/api/*` | Requires `apikey` header; rejects with 401 otherwise |
+| `limit-req` | `/api/*` | 10 req/sec per consumer, burst of 20; rejects with 429 when exceeded |
+| `prometheus` | all routes | Collects request count, latency, and status code metrics |
+| active health checks | upstream | Removes unhealthy backend instances from rotation automatically |
+
+## Project structure
 
 ```
+faas/
+├── api/                          # Node.js / TypeScript backend
+│   ├── src/
+│   │   ├── app.ts                # Express entry point
+│   │   ├── config/nats.ts        # NATS connection + stream constants
+│   │   ├── models/function.ts    # Shared types
+│   │   ├── services/
+│   │   │   ├── nats.service.ts   # NATS KV + JetStream wrapper
+│   │   │   └── function.service.ts  # Registry CRUD + invocation logic
+│   │   ├── controllers/
+│   │   │   └── function.controller.ts
+│   │   └── routes/index.ts
+│   ├── Dockerfile                # Multi-stage production image
+│   └── Dockerfile.dev            # Development image (nodemon)
+├── runner/                       # Async job executor
+│   └── src/index.ts              # NATS consumer → vm sandbox → KV result
+├── apisix/conf/apisix.yaml       # Gateway: routes, plugins, consumers, upstream
+├── monitoring/
+│   ├── prometheus.yml            # Scrape config
+│   └── grafana/provisioning/     # Auto-configured datasource
+├── docker-compose.yml            # Full production stack
+├── docker-compose.dev.yml        # Development stack (hot reload)
+└── generate-cert.sh              # TLS certificate generator
+```
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| API Gateway | Apache APISIX 3.11 — key-auth, rate limiting, Prometheus |
+| Messaging | NATS JetStream — async invocation queue + KV store |
+| Backend | Node.js 18 · TypeScript · Express |
+| Function execution | Node.js `vm` module (sandboxed, 3s timeout) |
+| Observability | Prometheus + Grafana |
+| Orchestration | Docker Compose |
+| TLS | OpenSSL (self-signed, localhost) |
+
+## Running the API server standalone
+
+```bash
+cd api
 npm install
+npm run start   # compile TypeScript and run
+npm run dev     # live reload with nodemon
 ```
 
 To compile and run:

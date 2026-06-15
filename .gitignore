@@ -1,9 +1,14 @@
-# Ignore libraries and build files
+# Dependencies and build output
 **/node_modules/
 **/dist/
 
-# Ignore certificates
-**.pem
+# Certificates and keys (generated locally via generate-cert.sh)
+certs/
+*.pem
+*.crt
+*.key
+*.csr
+*.srl
 
 .idea
 
