@@ -71,12 +71,10 @@ curl http://localhost:9080/api/jobs/<jobId> \
 
 After `docker compose up`, open:
 
-- **Grafana**: [http://localhost:3000](http://localhost:3000) (no login required)
-- **Prometheus**: [http://localhost:9090](http://localhost:9090)
-- **Raw metrics**: [http://localhost:9091/apisix/prometheus/metrics](http://localhost:9091/apisix/prometheus/metrics)
-- **NATS monitoring**: [http://localhost:8222](http://localhost:8222)
+- **Grafana**: [http://localhost:3001](http://localhost:3001) — no login required (Viewer role); a gateway dashboard is pre-provisioned
+- **Prometheus**: [http://localhost:9090](http://localhost:9090) — bound to localhost only
 
-Grafana comes pre-configured with the Prometheus datasource. To import the official APISIX dashboard, go to **Dashboards → Import** and enter ID `11719`.
+> In production mode, NATS ports and APISIX internal ports (admin, metrics) are not exposed to the host — they are reachable only within the Docker network. Use `docker compose -f docker-compose.dev.yml up` for local debugging access.
 
 ## Gateway plugins
 
@@ -122,7 +120,7 @@ faas/
 | API Gateway | Apache APISIX 3.11 — key-auth, rate limiting, Prometheus |
 | Messaging | NATS JetStream — async invocation queue + KV store |
 | Backend | Node.js 18 · TypeScript · Express |
-| Function execution | Node.js `vm` module (sandboxed, 3s timeout) |
+| Function execution | [`isolated-vm`](https://github.com/laverdet/isolated-vm) — V8 Isolate per invocation, 64 MB memory cap, 3 s CPU timeout |
 | Observability | Prometheus + Grafana |
 | Orchestration | Docker Compose |
 | TLS | OpenSSL (self-signed, localhost) |
