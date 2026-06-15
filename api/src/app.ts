@@ -27,6 +27,7 @@ controllers.forEach((controller) => {
   app.use("/api", controller.router);
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+start().catch((err) => {
+  console.error("Startup failed:", err);
+  process.exit(1);
 });
