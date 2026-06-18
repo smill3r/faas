@@ -4,22 +4,77 @@
 
 A lightweight Function-as-a-Service platform built on [Apache APISIX](https://apisix.apache.org/) and Node.js. Submit JavaScript functions via a REST API, invoke them synchronously or asynchronously, and watch live traffic metrics in Grafana.
 
-To be able to use HTTPS to communicate through the reverse proxy, you need to set up certificates first. 
-There is a file called init.sh that will generate certificates and export the certificates to a .env file so that they can be loaded into the appropriate configuration file in the /apisix directory.
-
-First run:
+## Architecture
 
 ```
-chmod +x init.sh
+                        ┌─────────────────────┐
+                        │    Client / curl     │
+                        └──────────┬──────────┘
+                                   │ HTTPS :9443  /  HTTP :9080
+                        ┌──────────▼──────────────────────────┐
+                        │           APISIX Gateway             │
+                        │   key-auth · rate-limit · prometheus │
+                        │       active health checks           │
+                        └────────┬──────────────┬─────────────┘
+                                 │              │  round-robin
+               ┌─────────────────▼──┐    ┌──────▼──────────────┐
+               │   api-server-1     │    │   api-server-2      │
+               │   Express  :3001   │    │   Express  :3002    │
+               └──┬──────────────┬──┘    └──┬──────────────┬───┘
+                  │              │           │              │
+          ┌───────▼──────┐       └─────┬─────┘              │
+          │   MongoDB    │             │               (same as left)
+          │  auth/users  │   ┌─────────▼──────────────────────┐
+          └──────────────┘   │         NATS JetStream          │
+                             │  ┌───────────────┐             │
+                             │  │  KV Store     │  function   │
+                             │  │  fn registry  │  records &  │
+                             │  │  job results  │  job state  │
+                             │  └───────────────┘             │
+                             │  ┌───────────────┐             │
+                             │  │  Queue        │  async      │
+                             │  │  invocations  │  dispatch   │
+                             │  └──────┬────────┘             │
+                             └─────────┼────────────────────--┘
+                                       │
+                             ┌─────────▼──────────────┐
+                             │        Runner           │
+                             │   NATS consumer         │
+                             │   isolated-vm sandbox   │
+                             │   64 MB · 3 s timeout   │
+                             └────────────────────────-┘
+
+          ┌───────────────────────────────────────────────────┐
+          │                Observability                      │
+          │  APISIX ──(scrape)──▶ Prometheus ──▶ Grafana     │
+          │  :9091                 :9090         :3001        │
+          └───────────────────────────────────────────────────┘
+
+          ┌───────────────────────────────────────────────────┐
+          │            APISIX Config Store                    │
+          │                   etcd  :2379                     │
+          └───────────────────────────────────────────────────┘
 ```
 
-Then:
+### Request flows
 
+**Sync invoke** (`POST /functions/:name/invoke`)
 ```
-./init.sh
+Client → APISIX → api-server → NATS KV (read code) → isolated-vm → response
 ```
 
-If you skip this step, you won't be able to use https to make requests through the reverse proxy, but you can just make regular http requests to the 9080 port.
+**Async invoke** (`POST /functions/:name/invoke/async`)
+```
+Client → APISIX → api-server → NATS KV (save pending job)
+                             → NATS Queue (publish invocation)
+                                            ↓
+                                         Runner → isolated-vm → NATS KV (write result)
+Client → APISIX → api-server → NATS KV (read result)   ← GET /jobs/:jobId
+```
+
+---
+
+To be able to use HTTPS through the reverse proxy you need TLS certificates. Run `./generate-cert.sh` to generate them and populate `.env` (git-ignored — never commit it) with the required values. Skip this step to use plain HTTP on port `9080`.
 
 > Skip this step to use plain HTTP on port `9080` — APISIX still starts but without TLS.
 

@@ -1,3 +1,6 @@
+# Environment variables — never commit this; copy .env.example and fill in values
+.env
+
 # Dependencies and build output
 **/node_modules/
 **/dist/
