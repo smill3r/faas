@@ -1,0 +1,60 @@
+routes:
+  - uri: /api
+    service_id: 1
+    name: api-root
+    plugins:
+      prometheus:
+        prefer_name: true
+
+  - uri: /api/*
+    service_id: 1
+    name: api-routes
+    plugins:
+      key-auth: {}
+      limit-req:
+        rate: 10
+        burst: 20
+        key: consumer_name
+        nodelay: true
+        rejected_code: 429
+      prometheus:
+        prefer_name: true
+
+consumers:
+  - username: demo
+    plugins:
+      key-auth:
+        key: ${{API_KEY}}
+
+services:
+  - id: 1
+    upstream_id: 2
+    name: api service
+
+upstreams:
+  - id: 2
+    nodes:
+      - host: api-server-1
+        port: 3000
+        weight: 1
+      - host: api-server-2
+        port: 3000
+        weight: 1
+    type: roundrobin
+    checks:
+      active:
+        http_path: /api/
+        healthy:
+          interval: 5
+          successes: 2
+        unhealthy:
+          interval: 5
+          http_failures: 2
+
+ssls:
+  -
+    cert: ${{SERVER_CERT}}
+    key: ${{SERVER_KEY}}
+    snis:
+      - ${{DOMAIN_NAME}}
+#END

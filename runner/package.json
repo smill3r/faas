@@ -1,0 +1,28 @@
+{
+  "name": "faas-runner",
+  "version": "1.0.0",
+  "description": "FaaS platform — async function executor",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "tsc && node dist/index.js",
+    "dev": "nodemon src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "jest"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "@nats-io/jetstream": "^3.0.0",
+    "@nats-io/kv": "^3.0.0",
+    "@nats-io/transport-node": "^3.0.0",
+    "isolated-vm": "^5.0.4"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.0.0",
+    "@types/node": "^18.0.0",
+    "jest": "^29.0.0",
+    "nodemon": "^3.1.7",
+    "ts-jest": "^29.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  }
+}
