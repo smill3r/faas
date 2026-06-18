@@ -27,6 +27,10 @@ controllers.forEach((controller) => {
   app.use("/api", controller.router);
 });
 
+async function start() {
+  app.listen(PORT, () => console.log(`FaaS API running on port ${PORT}`));
+}
+
 start().catch((err) => {
   console.error("Startup failed:", err);
   process.exit(1);

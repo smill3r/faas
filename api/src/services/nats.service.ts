@@ -47,6 +47,38 @@ class NatsService {
     return this.jetstreamKV?.purgeEntry(NATS_SETUP.kvStore, key);
   }
 
+  async saveFunction(record: { name: string; code: string; createdAt: string }): Promise<void> {
+    await this.kvPut(`functions.${record.name}`, JSON.stringify(record));
+  }
+
+  async getFunction(name: string): Promise<{ name: string; code: string; createdAt: string } | null> {
+    const entry = await this.kvGet(`functions.${name}`);
+    if (!entry) return null;
+    return JSON.parse(entry.string()) as { name: string; code: string; createdAt: string };
+  }
+
+  async listFunctions(): Promise<{ name: string; code: string; createdAt: string }[]> {
+    return [];
+  }
+
+  async deleteFunction(name: string): Promise<void> {
+    await this.kvDelete(`functions.${name}`);
+  }
+
+  async saveJobResult(record: { jobId: string; functionName: string; status: string }): Promise<void> {
+    await this.kvPut(`jobs.${record.jobId}`, JSON.stringify(record));
+  }
+
+  async getJobResult(jobId: string): Promise<{ jobId: string; functionName: string; status: string } | null> {
+    const entry = await this.kvGet(`jobs.${jobId}`);
+    if (!entry) return null;
+    return JSON.parse(entry.string()) as { jobId: string; functionName: string; status: string };
+  }
+
+  async publishInvocation(message: { jobId: string; functionName: string; [key: string]: unknown }): Promise<void> {
+    this.publishMessage(JSON.stringify(message), Subjects.Activations);
+  }
+
   /**
    * Publish a message to the stream with a specified subject
    */

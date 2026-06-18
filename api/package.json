@@ -6,7 +6,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node -r tsconfig-paths/register dist/app.js",
-    "dev": "nodemon -r tsconfig-paths/register src/app.ts"
+    "dev": "nodemon -r tsconfig-paths/register src/app.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -17,8 +19,12 @@
     "@nats-io/jetstream": "^3.0.0",
     "@nats-io/kv": "^3.0.0",
     "@nats-io/transport-node": "^3.0.0",
+    "axios": "^1.7.7",
+    "dockerode": "^4.0.2",
     "express": "^4.21.1",
     "isolated-vm": "^5.0.4",
+    "mongoose": "^8.8.1",
+    "rxjs": "^7.8.1",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
@@ -33,15 +39,5 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.6.3"
-  },
-  "dependencies": {
-    "@nats-io/jetstream": "^3.0.0-26",
-    "@nats-io/kv": "^3.0.0-29",
-    "@nats-io/transport-node": "^3.0.0-24",
-    "axios": "^1.7.7",
-    "dockerode": "^4.0.2",
-    "express": "^4.21.1",
-    "mongoose": "^8.8.1",
-    "rxjs": "^7.8.1"
   }
 }
